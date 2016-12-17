@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  	<meta charset="UTF-8">
+  	<title>New York Times Search</title>
+  	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" >
+  	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.6/flatly/bootstrap.min.css">
+  	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+	<!-- <link rel="stylesheet" href="style.css"> -->
+	 <style>
+
+
+
+		.panel-body a 
+		{
+		    word-break:break-all
+		}
+	 </style>
+  </head>
+  <body>
+
+    <div class="container">
+
+    	<div class="jumbotron" style="background-color: #2c3e50 ; color: white;">
+    		<h1 class="text-center"><strong><i class="newspaper"></i> NY TIMES SEARCH</strong></h1>
+    	</div>
+
+    	
+    	<div id="searchParam" class="row">
+    		<div class="col-sm-12">
+    		<br>
+    			
+    			<div class="panel panel-primary">
+    				<div class="panel-heading">
+    					<h3 class="panel-title"><strong>Search Parameters</strong></h3>
+    				</div>
+    				<div class="panel-body">
+
+    					
+    					<form role="form">
+
+    				  	  
+    					  <div class="form-group">
+    					    <label for="searchTerm">Search Term:</label>
+    					    <input type="text" class="form-control" id="searchTerm">
+						  </div>
+
+    					  
+    					  <div class="form-group">
+    					    <label for="numRecordsSelect">Number of Records to Retrieve:</label>
+    						<select class="form-control" id="numRecordsSelect">
+    							<option value=1>1</option>
+								<option value=5 selected>5</option>
+    							<option value=10>10</option>
+    						</select>			  
+						  </div>
+
+    				  	  
+    					  <div class="form-group">
+    					    <label for="startYear">Start Year (Optional):</label>
+    					    <input type="text" class="form-control" id="startYear">
+    					  </div>
+
+    				  	  
+    					  <div class="form-group">
+    					    <label for="endYear">End Year (Optional):</label>
+    					    <input type="text" class="form-control" id="endYear">
+                            </div>
+
+
+    						<input type="button" class="btn btn-primary btnSeccion" id="searchBtn" value="Search"/>
+
+
+    						<input type="button" class="btn btn-primary btnSeccion" id="clearBtn" value="Clear"/>
+
+    					</form> 
+    				</div> 
+    			</div> 
+    	</div> 
+    </div>
+
+</div>
+  
+</div>
+    </div>
+      <script src="http://code.jquery.com/jquery.js"></script>
+      <script type="text/javascript">
+           var apikey = '5d1ef0ce5f6c4598bf96e86294c9108c';
+    var search_term;
+    var numOfRecords;
+    var startYear;
+    var endYear ;
+    $("#clearBtn").on("click", function (){
+        $("#searchTerm").val("");
+        $("#numRecordsSelect").val("5");
+        $("#startYear").val("");
+        $("#endYear").val("");
+
+    });
+
+    $("#searchBtn").on("click", function () {
+
+		//Grabs the values of the input's
+        search_term = $("#searchTerm").val();
+        startYear = $("#startYear").val();
+        endYear = $("#endYear").val();
+        numOfRecords = $("#numRecordsSelect").val();
+
+
+        var url = "https://api.nytimes.com/svc/search/v2/articlesearch.json";
+
+        //Conditionals to make year filters optional
+        if ((startYear != "") && (endYear != "")){
+
+            url += '?' + $.param({
+                'api-key': "5d1ef0ce5f6c4598bf96e86294c9108c",
+                'q': search_term,
+				'begin_date': startYear + "0101",
+                'end_date': endYear + "1231"
+            })}
+
+
+        else if((startYear == "")&&(endYear != "")){
+
+            url += '?' + $.param({
+                    'api-key': "5d1ef0ce5f6c4598bf96e86294c9108c",
+                    'q': search_term,
+					'end_date': endYear + "1231"
+			})}
+
+
+		else if ((startYear != "")&&(endYear == "")){
+
+            url += '?' + $.param({
+                    'api-key': "5d1ef0ce5f6c4598bf96e86294c9108c",
+                    'q': search_term,
+                    'begin_date': startYear + "0101"
+		})}
+
+
+		else if ((startYear == "")&&(endYear == "")){
+
+            url += '?' + $.param({
+                    'api-key': "5d1ef0ce5f6c4598bf96e86294c9108c",
+                    'q': search_term
+		})};
+
+
+        $.ajax({
+            url: url,
+            method: "GET"
+        }).done(function(response) {
+                console.log(response);
+
+                //Empty's body, creates new div call indResults
+                $("#searchParam").empty().append($("<div>").addClass("col-sm-12").attr("id","indResults"));
+
+                //Create's div within indResults called resultsPanel
+            	$("#indResults")
+					.append($("<div>")
+						.addClass("panel panel-primary").attr("id","resultsPanel")
+
+						//Creates div within resultsPanel called panel-heading, and Inserts HTML
+						.append($("<div>")
+							.addClass("panel-heading")
+							.html('<h3 class="panel-title"><strong>Top Article\'s</strong></h3>'))
+
+						//Creates div within resultsPanel called panel-body
+						.append($("<div>")
+							.addClass("panel-body")
+							.append($("<div>")
+								.addClass('font-weight bold').attr("id","resultsList"))
+						));
+
+			//For loop for dynamically creating elements for results
+            for (var i = 0; i < numOfRecords; i++){
+                console.log(i);
+ 					var headline = response.response.docs[i].headline.main;
+
+ 					//only here for reference for when i make them links
+                    var articleLink = "<a href=response.response.docs[i].web_url>Read Full Article</a>";
+                    //
+                    
+
+					//Only some articles contain something byline, and then again only some of those contain something in original
+					if ((jQuery.isEmptyObject(response.response.docs[i].byline)== true)||(jQuery.isEmptyObject(response.response.docs[i].byline.original) == true)) {
+                         var onClick = response.response.docs[i].web_url;
+                            console.log(onClick);   
+					    //Creates a new line in resultsList and inserts headline
+                        $("#resultsList")
+                            .append($('<div>' + '<a href=' + onClick + '>')
+                                .addClass("well well-lg")
+                                    
+                                        .html('<a href='+ onClick + ' target="_blank">' + headline + '</a>'));
+                    }
+                    else{
+
+					    //Creates a new line in resultsList, inserts headline, and Author
+                    var onClick = response.response.docs[i].web_url;
+                            console.log(onClick);   
+                        $("#resultsList")
+                            .append($('<div>' + '<a href=' + onClick + '>')
+                                .addClass("well well-lg")
+                                    
+                                        .html(headline)
+                                            .append($("<p>")
+									           .html('<a href='+ onClick + ' target="_blank">' + response.response.docs[i].byline.original + '</a>')));
+                            
+					}
+            }
+            });
+    }); 
+      </script>
+  </body>
+</html>
+
